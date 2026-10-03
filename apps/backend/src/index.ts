@@ -1,11 +1,16 @@
-import { Elysia, t } from "elysia";
-import { cors } from "@elysiajs/cors";
+import { Elysia } from 'elysia';
+import { cors } from '@elysiajs/cors';
+import { nodeRoutes } from '@/routes/node';
 
 const app = new Elysia()
-  .use(cors()) // Enable CORS for frontend requests
-  .get("/", () => "Hello World!")
-  .listen(3000);
+  .use(
+    cors({
+      origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization']
+    })
+  )
+  .use(nodeRoutes)
+  .listen(process.env.PORT || 3000);
 
-console.log(`Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
-
-export type App = typeof app;
+console.log(`Elysia database tree API listening at http://localhost:${app.server?.port}`);
