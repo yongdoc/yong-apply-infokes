@@ -17,7 +17,7 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "types": ["bun"],
+    "types": ["bun", "vite/client"],
 
     /* Path Aliasing */
     "paths": {
