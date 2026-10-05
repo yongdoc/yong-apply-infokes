@@ -4,6 +4,7 @@ import { nextTick } from 'vue';
 import { createMockApi } from '@/test/mock-api';
 import { flushPromises } from '@/test/flush-promises';
 import HomeView from '@/views/HomeView.vue';
+import SearchPanel from '@/components/explorer/SearchPanel.vue';
 import type { Node } from '@/types/node';
 
 vi.mock('@/utils/api', () => ({ api: createMockApi() }));
@@ -25,6 +26,14 @@ const childFile: Node = {
   type: 'file',
   parent_id: 'f1',
   file_size_bytes: 100,
+};
+
+const searchMatch: Node = {
+  id: 's1',
+  name: 'report.txt',
+  type: 'file',
+  parent_id: 'f1',
+  file_size_bytes: 200,
 };
 
 describe('HomeView', () => {
@@ -137,5 +146,95 @@ describe('HomeView', () => {
     await nextTick();
 
     expect(wrapper.text()).toContain('Confirm Delete');
+  });
+
+  it('runs a search, clears the selected folder, and shows results', async () => {
+    mockApi.api.nodes.folder.get.mockResolvedValue({ data: [rootFolder], error: null });
+    mockApi.api.nodes('f1').children.get.mockResolvedValue({ data: [childFile], error: null });
+    mockApi.api.nodes.search.get.mockResolvedValue({ data: [searchMatch], error: null });
+
+    const wrapper = mount(HomeView, {
+      global: { stubs: { Navbar: true } },
+    });
+    await flushPromises();
+
+    const folderButton = wrapper.findAll('button').find((btn) => btn.text().includes('Root'));
+    await folderButton?.trigger('click');
+    await flushPromises();
+
+    const searchPanel = wrapper.findComponent(SearchPanel);
+    await searchPanel.vm.$emit('search', 'report');
+    await flushPromises();
+
+    expect(mockApi.api.nodes.search.get).toHaveBeenCalledWith({ q: 'report' });
+    expect(wrapper.text()).toContain('Search Results');
+    expect(wrapper.text()).toContain('report.txt');
+    expect(wrapper.text()).not.toContain('No folder selected');
+  });
+
+  it('clears search state when Clear is emitted', async () => {
+    mockApi.api.nodes.folder.get.mockResolvedValue({ data: [rootFolder], error: null });
+    mockApi.api.nodes.search.get.mockResolvedValue({ data: [searchMatch], error: null });
+
+    const wrapper = mount(HomeView, {
+      global: { stubs: { Navbar: true } },
+    });
+    await flushPromises();
+
+    const searchPanel = wrapper.findComponent(SearchPanel);
+    await searchPanel.vm.$emit('search', 'report');
+    await flushPromises();
+
+    await searchPanel.vm.$emit('clear');
+    await nextTick();
+
+    expect(wrapper.text()).toContain('No folder selected');
+  });
+
+  it('exits search when a folder is selected from the left panel', async () => {
+    mockApi.api.nodes.folder.get.mockResolvedValue({ data: [rootFolder], error: null });
+    mockApi.api.nodes.search.get.mockResolvedValue({ data: [searchMatch], error: null });
+    mockApi.api.nodes('f1').children.get.mockResolvedValue({ data: [childFile], error: null });
+
+    const wrapper = mount(HomeView, {
+      global: { stubs: { Navbar: true } },
+    });
+    await flushPromises();
+
+    const searchPanel = wrapper.findComponent(SearchPanel);
+    await searchPanel.vm.$emit('search', 'report');
+    await flushPromises();
+
+    const folderButton = wrapper.findAll('button').find((btn) => btn.text().includes('Root'));
+    await folderButton?.trigger('click');
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Root');
+    expect(wrapper.text()).toContain('file.txt');
+    expect(wrapper.text()).not.toContain('Search Results');
+  });
+
+  it('navigates into a folder search result when clicked', async () => {
+    const folderResult: Node = { id: 'fr1', name: 'FoundFolder', type: 'folder', parent_id: null };
+    mockApi.api.nodes.folder.get.mockResolvedValue({ data: [rootFolder], error: null });
+    mockApi.api.nodes.search.get.mockResolvedValue({ data: [folderResult], error: null });
+    mockApi.api.nodes('fr1').children.get.mockResolvedValue({ data: [], error: null });
+
+    const wrapper = mount(HomeView, {
+      global: { stubs: { Navbar: true } },
+    });
+    await flushPromises();
+
+    const searchPanel = wrapper.findComponent(SearchPanel);
+    await searchPanel.vm.$emit('search', 'found');
+    await flushPromises();
+
+    const resultRow = wrapper.findAll('li').find((li) => li.text().includes('FoundFolder'));
+    await resultRow?.trigger('click');
+    await flushPromises();
+
+    expect(mockApi.api.nodes('fr1').children.get).toHaveBeenCalled();
+    expect(wrapper.text()).toContain('FoundFolder');
+    expect(wrapper.text()).not.toContain('Search Results');
   });
 });

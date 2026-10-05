@@ -93,6 +93,35 @@ describe('NodeController.getAllFolder', () => {
   });
 });
 
+describe('NodeController.search', () => {
+  test('returns matching nodes scoped to the user', async () => {
+    const NodeController = await loadController();
+
+    mockSql.pushResult([
+      { id: '1', name: 'Documents', type: 'folder', parent_id: null },
+      { id: '2', name: 'report.txt', type: 'file', parent_id: '1' },
+    ]);
+
+    const ctx = createContext({ query: { q: 'doc' } });
+    const result = await NodeController.search(ctx as Context<{ query: { q: string } }>);
+
+    expect(result).toHaveLength(2);
+    expect(result[0]?.id).toBe('1');
+    expect(result[1]?.id).toBe('2');
+  });
+
+  test('returns empty array when nothing matches', async () => {
+    const NodeController = await loadController();
+
+    mockSql.pushResult([]);
+
+    const ctx = createContext({ query: { q: 'nothing' } });
+    const result = await NodeController.search(ctx as Context<{ query: { q: string } }>);
+
+    expect(result).toEqual([]);
+  });
+});
+
 describe('NodeController.getChildren', () => {
   test('returns children when target is a folder', async () => {
     const NodeController = await loadController();

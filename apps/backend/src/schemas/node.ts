@@ -6,6 +6,12 @@ export const GetChildrenSchema = {
   }),
 };
 
+export const SearchNodesSchema = {
+  query: t.Object({
+    q: t.String({ minLength: 1, maxLength: 255 }),
+  }),
+};
+
 export const CreateNodeSchema = {
   body: t.Object({
     name: t.String({ minLength: 1, maxLength: 255 }),

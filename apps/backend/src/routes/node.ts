@@ -7,6 +7,7 @@ import {
   UpdateNodeSchema,
   DeleteNodeSchema,
   GetChildrenSchema,
+  SearchNodesSchema,
 } from '@/schemas/node';
 
 export const nodeRoutes = new Elysia({ prefix: "/api/nodes" })
@@ -29,6 +30,7 @@ export const nodeRoutes = new Elysia({ prefix: "/api/nodes" })
   })
   .get("/", NodeController.getAll)
   .get("/folder", NodeController.getAllFolder)
+  .get("/search", NodeController.search, SearchNodesSchema)
   .get("/:id/children", NodeController.getChildren, GetChildrenSchema)
   .post("/", NodeController.create, CreateNodeSchema)
   .put("/:id", NodeController.update, UpdateNodeSchema)

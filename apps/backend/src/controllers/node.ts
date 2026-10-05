@@ -24,6 +24,22 @@ export const NodeController = {
     return buildTree(rawNodes);
   },
 
+  // SEARCH
+  async search(ctx: Context<{ query: { q: string } }>) {
+    const { query } = ctx;
+    const { q } = query;
+    const { user } = ctx as any;
+
+    const trimmed = q.trim();
+    const pattern = `%${trimmed}%`;
+
+    const results = await sql<
+      Node[]
+    >`SELECT * FROM infokes.nodes WHERE owner_id = ${user.id} AND name ILIKE ${pattern} ORDER BY type DESC, name ASC`;
+
+    return [...results];
+  },
+
   // GET CHILDREN
   async getChildren(ctx: Context<{ params: { id: string } }>) {
     const { params } = ctx;
@@ -38,7 +54,7 @@ export const NodeController = {
       Node[]
     >`SELECT * FROM infokes.nodes WHERE parent_id = ${id} AND owner_id = ${user.id} ORDER BY type DESC, name ASC`
     
-    return buildTree(childrenNode);
+    return [...childrenNode];
   },
 
   // CREATE NODE

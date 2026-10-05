@@ -65,6 +65,25 @@ function expandToSelected(folderList: Node[], targetId: string): boolean {
   return false
 }
 
+function findFolderById(folderList: Node[], targetId: string): Node | null {
+  for (const folder of folderList) {
+    if (folder.id === targetId) {
+      return folder
+    }
+    if (folder.children && folder.children.length > 0) {
+      const found = findFolderById(folder.children, targetId)
+      if (found) {
+        return found
+      }
+    }
+  }
+  return null
+}
+
+function getFolderById(id: string): Node | null {
+  return findFolderById(folders.value, id)
+}
+
 watch(
   () => props.selectedId,
   (newId) => {
@@ -79,7 +98,8 @@ onMounted(() => {
 })
 
 defineExpose({
-  refresh: fetchFolders
+  refresh: fetchFolders,
+  getFolderById
 })
 </script>
 

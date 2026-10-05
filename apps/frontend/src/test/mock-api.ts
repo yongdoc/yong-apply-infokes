@@ -11,6 +11,7 @@ export interface MockApi {
       get: ReturnType<typeof vi.fn>;
       post: ReturnType<typeof vi.fn>;
       folder: { get: ReturnType<typeof vi.fn> };
+      search: { get: ReturnType<typeof vi.fn> };
     } & ((id: string) => {
       children: { get: ReturnType<typeof vi.fn> };
       put: ReturnType<typeof vi.fn>;
@@ -32,6 +33,7 @@ export function createMockApi(): MockApi {
       get: vi.fn(),
       post: vi.fn(),
       folder: { get: vi.fn() },
+      search: { get: vi.fn() },
     }
   );
 
