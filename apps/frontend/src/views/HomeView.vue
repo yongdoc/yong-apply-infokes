@@ -113,12 +113,12 @@ function handleUpdated(updatedNode: Node): void {
 }
 
 async function handleDeleted(): Promise<void> {
-  await refreshData()
   // If the deleted node is the selected folder, deselect it
   if (selectedFolder.value && selectedFolder.value.id === deletingNode.value?.id) {
     selectedFolder.value = null
     children.value = []
   }
+  await refreshData()
 }
 
 async function handleMoved(): Promise<void> {
