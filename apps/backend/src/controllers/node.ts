@@ -1,103 +1,97 @@
 import { type Context } from "elysia";
 import { sql } from "@/config/db";
 import { buildTree, type Node } from "@/utils/tree";
+import { NotFoundError, BadRequestError, UnauthorizedError } from "@/utils/error";
 
 export const NodeController = {
   // GET ALL
-  async getAll() {
+  async getAll(ctx: Context) {
+    const { user } = ctx as any;
     const rawNodes = await sql<
       Node[]
-    >`SELECT * FROM infokes.nodes ORDER BY type DESC, name ASC`;
+    >`SELECT * FROM infokes.nodes WHERE owner_id = ${user.id} ORDER BY type DESC, name ASC`;
 
     return buildTree(rawNodes);
   },
 
   // GET ALL FOLDER
-  async getAllFolder() {
+  async getAllFolder(ctx: Context) {
+    const { user } = ctx as any;
     const rawNodes = await sql<
       Node[]
-    >`SELECT * FROM infokes.nodes WHERE type = 'folder' ORDER BY name ASC`;
+    >`SELECT * FROM infokes.nodes WHERE type = 'folder' AND owner_id = ${user.id} ORDER BY name ASC`;
 
     return buildTree(rawNodes);
   },
 
   // GET CHILDREN
-  async getChildren({ params, set }: Context<{ params: { id: string } }>) {
+  async getChildren(ctx: Context<{ params: { id: string } }>) {
+    const { params } = ctx;
     const { id } = params;
+    const { user } = ctx as any;
 
-    const [parent] = await sql`SELECT type FROM infokes.nodes WHERE id = ${id}`;
-    if (!parent) {
-      set.status = 404;
-      return { message: "Folder not found." };
-    }
-    if (parent.type !== "folder") {
-      set.status = 400;
-      return { message: "Target node must be a folder." };
-    }
+    const [parent] = await sql`SELECT type FROM infokes.nodes WHERE id = ${id} AND owner_id = ${user.id}`;
+    if (!parent) throw new NotFoundError('Folder not found or access denied.');
+    if (parent.type !== "folder") throw new BadRequestError('Target node is a file, not a folder.');
 
-    const childrenNodes = await sql<
+    return await sql<
       Node[]
-    >`SELECT * FROM infokes.nodes WHERE parent_id = ${id} ORDER BY type DESC, name ASC`;
-
-    return childrenNodes;
+    >`SELECT * FROM infokes.nodes WHERE parent_id = ${id} AND owner_id = ${user.id} ORDER BY type DESC, name ASC`;
   },
 
   // CREATE NODE
-  async create({ body, set }: Context<{ body: any }>) {
-    const { name, type, parentId, fileSizeBytes, mimeType } = body;
+  async create(ctx: Context<{ body: { name: string; type: 'folder' | 'file'; parent_id?: string | null; file_size_bytes?: number; mime_type?: string | null } }>) {
+    const { body } = ctx;
+    const { user } = ctx as any;
+    const { name, type, parent_id, file_size_bytes, mime_type } = body;
 
-    console.log(parentId)
-    if (parentId) {
+    if (parent_id) {
       const [parent] =
-        await sql`SELECT type FROM infokes.nodes WHERE id = ${parentId}`;
-      if (!parent) {
-        set.status = 404;
-        return { message: "Folder not found." };
-      }
-      if (parent.type !== "folder") {
-        set.status = 400;
-        return { message: "Target node is not a folder." };
-      }
+        await sql`SELECT type FROM infokes.nodes WHERE id = ${parent_id} AND owner_id = ${user.id}`;
+      if (!parent) throw new NotFoundError('Specified parent folder directory does not exist.');
+      if (parent.type !== "folder") throw new BadRequestError('Target parent placement node must be a folder type');
     }
 
     const [newNode] = await sql`
-      INSERT INTO infokes.nodes (name, type, parent_id, file_size_bytes, mime_type)
-      VALUES (${name}, ${type}, ${parentId || null}, ${fileSizeBytes || 0}, ${mimeType || null})
+      INSERT INTO infokes.nodes (name, type, parent_id, owner_id, file_size_bytes, mime_type)
+      VALUES (${name}, ${type}, ${parent_id || null}, ${user.id}, ${file_size_bytes || 0}, ${mime_type || null})
       RETURNING *
     `;
 
-    set.status = 201;
+    ctx.set.status = 201;
     return newNode;
   },
 
-  async update({ params, body, set }: Context<{ params: { id: string }; body: any }>) {
+  async update(ctx: Context<{ params: { id: string }; body: any }>) {
+    const { params, body } = ctx;
     const { id } = params;
-    const { name, parentId, fileSizeBytes, mimeType } = body;
+    const { name, parent_id, file_size_bytes, mime_type } = body;
+    const { user } = ctx as any;
 
-    const [currentNode] =
-      await sql`SELECT * FROM infokes.nodes WHERE id = ${id}`;
-    if (!currentNode) {
-      set.status = 404;
-      return { message: "Node not found." };
+    if (parent_id === id) throw new BadRequestError('A structural directory node cannot be bound to itself as its own parent.');
+
+    const [currentNode] = await sql`SELECT id FROM infokes.nodes WHERE id = ${id} AND owner_id = ${user.id}`;
+    if (!currentNode) throw new NotFoundError('Target node not found or access denied.');
+
+    if (parent_id) {
+      const [parentFolder] = await sql`
+        SELECT type FROM infokes.nodes 
+        WHERE id = ${parent_id} AND owner_id = ${user.id}
+      `;
+      if (!parentFolder) throw new NotFoundError('Specified destination parent folder does not exist or access denied.');
+      if (parentFolder.type !== 'folder') throw new BadRequestError('Target destination must be a folder type.');
     }
-
-    if (parentId === id) {
-      set.status = 400;
-      return { message: "A node cannot be its own parent." };
-    }
-
+    
     const updatePayload: Record<string, any> = {
       updated_at: new Date(),
     };
 
     if (name !== undefined) updatePayload.name = name;
-    if (parentId !== undefined) updatePayload.parent_id = parentId;
-    if (fileSizeBytes !== undefined)
-      updatePayload.file_size_bytes = fileSizeBytes;
-    if (mimeType !== undefined) updatePayload.mime_type = mimeType;
+    if (parent_id !== undefined) updatePayload.parent_id = parent_id;
+    if (file_size_bytes !== undefined) updatePayload.file_size_bytes = file_size_bytes;
+    if (mime_type !== undefined) updatePayload.mime_type = mime_type;
 
     if (Object.keys(updatePayload).length === 1) {
-      console.log("No update");
       return currentNode;
     }
 
@@ -108,21 +102,17 @@ export const NodeController = {
       RETURNING *
     `;
 
-    if (!updatedNode) {
-      set.status = 404;
-      return { message: "Node not found." };
-    }
+    ctx.set.status = 201;
     return updatedNode;
   },
 
-  async delete({ params, set }: Context<{ params: { id: string } }>) {
+  async delete(ctx: Context<{ params: { id: string } }>) {
+    const { params } = ctx;
+    const { user } = ctx as any;
     const result =
-      await sql`DELETE FROM infokes.nodes WHERE id = ${params.id} RETURNING id`;
+      await sql`DELETE FROM infokes.nodes WHERE id = ${params.id} AND owner_id = ${user.id} RETURNING id`;
 
-    if (result.length === 0) {
-      set.status = 404;
-      return { message: "Node not found." };
-    }
+    if (result.length === 0) throw new NotFoundError('Node not found, already deleted, or access denied.');
 
     return {
       success: true,
