@@ -5,6 +5,7 @@ CREATE TABLE infokes.nodes (
     type VARCHAR(10) CHECK (type IN ('folder', 'file')) NOT NULL, 
     
     parent_id UUID REFERENCES infokes.nodes(id) ON DELETE CASCADE,
+    owner_id UUID REFERENCES infokes.users(id) ON DELETE CASCADE,
     
     file_size_bytes BIGINT DEFAULT 0,
     mime_type VARCHAR(100),
@@ -20,5 +21,5 @@ CREATE TABLE infokes.nodes (
 CREATE INDEX idx_nodes_directory_listing ON infokes.nodes (parent_id, type DESC, name ASC);
 
 -- down
-DROP INDEX IF EXSITS infokes.idx_nodes_directory_listing;
+DROP INDEX IF EXISTS infokes.idx_nodes_directory_listing;
 DROP TABLE IF EXISTS infokes.nodes CASCADE;
