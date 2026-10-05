@@ -15,3 +15,10 @@ export const LoginSchema = {
         password: t.String({ minLength: 6 })
     })
 }
+
+export const UpdatePasswordSchema = {
+    body: t.Object({
+        old_password: t.String({ minLength: 6 }),
+        new_password: t.String({ minLength: 6 })
+    })
+}

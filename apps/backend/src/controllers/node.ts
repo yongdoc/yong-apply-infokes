@@ -34,9 +34,11 @@ export const NodeController = {
     if (!parent) throw new NotFoundError('Folder not found or access denied.');
     if (parent.type !== "folder") throw new BadRequestError('Target node is a file, not a folder.');
 
-    return await sql<
+    const childrenNode= await sql<
       Node[]
-    >`SELECT * FROM infokes.nodes WHERE parent_id = ${id} AND owner_id = ${user.id} ORDER BY type DESC, name ASC`;
+    >`SELECT * FROM infokes.nodes WHERE parent_id = ${id} AND owner_id = ${user.id} ORDER BY type DESC, name ASC`
+    
+    return buildTree(childrenNode);
   },
 
   // CREATE NODE
@@ -102,7 +104,7 @@ export const NodeController = {
       RETURNING *
     `;
 
-    ctx.set.status = 201;
+    ctx.set.status = 200;
     return updatedNode;
   },
 

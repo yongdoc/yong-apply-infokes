@@ -40,4 +40,6 @@ const app = new Elysia()
   .use(nodeRoutes)
   .listen(process.env.PORT || 3000);
 
+export type App = typeof app;
+
 console.log(`Elysia database tree API listening at http://localhost:${app.server?.port}`);
