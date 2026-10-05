@@ -1,5 +1,6 @@
 import { reactive, readonly } from 'vue'
 import { api } from '@/utils/api'
+import { extractApiErrorMessage } from '@/utils/api-error'
 
 export interface User {
   id: string
@@ -67,11 +68,7 @@ export const authStore = {
     try {
       const { data, error } = await api.api.auth.login.post({ identifier, password })
       if (error) {
-        if (typeof error === 'object' && error !== null && 'message' in error) {
-          state.error = String(error.message)
-        } else {
-          state.error = 'Login failed.'
-        }
+        state.error = extractApiErrorMessage(error, 'Login failed.')
         return false
       }
       if (!data) {
@@ -94,11 +91,7 @@ export const authStore = {
     try {
       const { error } = await api.api.auth.register.post({ name, username, email, password })
       if (error) {
-        if (typeof error === 'object' && error !== null && 'message' in error) {
-          state.error = String(error.message)
-        } else {
-          state.error = 'Registration failed.'
-        }
+        state.error = extractApiErrorMessage(error, 'Registration failed.')
         return false
       }
       return true
@@ -120,11 +113,7 @@ export const authStore = {
     try {
       const { error } = await api.api.auth.password.put({ old_password: oldPassword, new_password: newPassword })
       if (error) {
-        if (typeof error === 'object' && error !== null && 'message' in error) {
-          state.error = String(error.message)
-        } else {
-          state.error = 'Password update failed.'
-        }
+        state.error = extractApiErrorMessage(error, 'Password update failed.')
         return false
       }
       return true

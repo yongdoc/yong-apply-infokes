@@ -2,6 +2,7 @@ import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
 import { nodeRoutes } from '@/routes/node';
 import { NotFoundError, BadRequestError, UnauthorizedError } from '@/utils/error';
+import { getSliceBetween } from '@/utils/slice';
 import { authRoutes } from './routes/auth';
 
 const app = new Elysia()
@@ -23,7 +24,8 @@ const app = new Elysia()
         return { success: false, error: 'UNAUTHORIZED', message: error.message };
       case 'VALIDATION':
         set.status = 422;
-        return { success: false, message: error.all };
+        // straight forward take from message for invalid input requirement schema
+        return { success: false, message: getSliceBetween(error.message, `message": "`, `",`)};
       default:
         set.status = 500;
         return { success: false, message: 'Internal Server Error'};

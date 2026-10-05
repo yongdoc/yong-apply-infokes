@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { api } from '@/utils/api'
+import { extractApiErrorMessage } from '@/utils/api-error'
 import type { Node } from '@/types/node'
 import MoveNodeTreeItem from './MoveNodeTreeItem.vue'
 
@@ -38,9 +39,7 @@ async function fetchFolders(): Promise<void> {
   try {
     const { data, error: apiError } = await api.api.nodes.folder.get()
     if (apiError) {
-      error.value = typeof apiError === 'object' && apiError !== null && 'message' in apiError
-        ? String(apiError.message)
-        : 'Failed to load folders.'
+      error.value = extractApiErrorMessage(apiError, 'Failed to load folders.')
       return
     }
     folders.value = (data ?? []) as unknown as Node[]
@@ -97,9 +96,7 @@ async function handleMove(): Promise<void> {
     })
 
     if (apiError) {
-      error.value = typeof apiError === 'object' && apiError !== null && 'message' in apiError
-        ? String(apiError.message)
-        : 'Failed to move item.'
+      error.value = extractApiErrorMessage(apiError, 'Failed to move item.')
       return
     }
 

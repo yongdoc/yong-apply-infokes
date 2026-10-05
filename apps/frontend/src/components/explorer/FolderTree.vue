@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { api } from '@/utils/api'
+import { extractApiErrorMessage } from '@/utils/api-error'
 import type { Node } from '@/types/node'
 import FolderTreeItem from './FolderTreeItem.vue'
 
@@ -23,9 +24,7 @@ async function fetchFolders(): Promise<void> {
   try {
     const { data, error: apiError } = await api.api.nodes.folder.get()
     if (apiError) {
-      error.value = typeof apiError === 'object' && apiError !== null && 'message' in apiError
-        ? String(apiError.message)
-        : 'Failed to load folders.'
+      error.value = extractApiErrorMessage(apiError, 'Failed to load folders.')
       return
     }
     folders.value = (data ?? []) as unknown as Node[]

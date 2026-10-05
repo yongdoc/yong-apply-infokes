@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { api } from '@/utils/api'
+import { extractApiErrorMessage } from '@/utils/api-error'
 import type { Node } from '@/types/node'
 
 const props = defineProps<{
@@ -53,9 +54,7 @@ async function handleSubmit(): Promise<void> {
     const { data, error: apiError } = await api.api.nodes({ id: props.node.id }).put(body)
 
     if (apiError) {
-      error.value = typeof apiError === 'object' && apiError !== null && 'message' in apiError
-        ? String(apiError.message)
-        : 'Failed to update item.'
+      error.value = extractApiErrorMessage(apiError, 'Failed to update item.')
       return
     }
 

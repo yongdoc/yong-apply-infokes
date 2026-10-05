@@ -93,7 +93,7 @@ function handleClose(): void {
           />
         </div>
 
-        <p v-if="authStore.state.error" class="text-sm text-red-600">
+        <p v-if="authStore.state.error" role="alert" class="text-sm text-red-600">
           {{ authStore.state.error }}
         </p>
 

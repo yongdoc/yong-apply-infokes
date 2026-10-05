@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { api } from '@/utils/api'
+import { extractApiErrorMessage } from '@/utils/api-error'
 import type { Node } from '@/types/node'
 
 const props = defineProps<{
@@ -68,9 +69,7 @@ async function handleSubmit(): Promise<void> {
     const { data, error: apiError } = await api.api.nodes.post(payload)
 
     if (apiError) {
-      error.value = typeof apiError === 'object' && apiError !== null && 'message' in apiError
-        ? String(apiError.message)
-        : 'Failed to create item.'
+      error.value = extractApiErrorMessage(apiError, 'Failed to create item.')
       return
     }
 

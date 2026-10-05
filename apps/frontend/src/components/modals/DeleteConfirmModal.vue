@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { api } from '@/utils/api'
+import { extractApiErrorMessage } from '@/utils/api-error'
 import type { Node } from '@/types/node'
 
 const props = defineProps<{
@@ -26,9 +27,7 @@ async function handleConfirm(): Promise<void> {
     const { error: apiError } = await api.api.nodes({ id: props.node.id }).delete()
 
     if (apiError) {
-      error.value = typeof apiError === 'object' && apiError !== null && 'message' in apiError
-        ? String(apiError.message)
-        : 'Failed to delete item.'
+      error.value = extractApiErrorMessage(apiError, 'Failed to delete item.')
       return
     }
 
