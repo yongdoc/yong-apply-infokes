@@ -22,6 +22,9 @@
   "scripts": {
     "dev:frontend": "bun --filter frontend dev",
     "dev:backend": "bun --filter backend dev",
-    "dev": "concurrently \"bun dev:frontend\" \"bun dev:backend\""
+    "dev": "concurrently \"bun dev:frontend\" \"bun dev:backend\"",
+    "test": "bun run test:backend && bun run test:frontend",
+    "test:backend": "bun --filter backend test",
+    "test:frontend": "bun --cwd=apps/frontend run --bun test"
   }
 }
