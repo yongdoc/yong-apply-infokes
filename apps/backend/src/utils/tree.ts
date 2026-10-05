@@ -2,11 +2,11 @@ export interface Node {
   id: string;
   name: string;
   type: "folder" | "file";
-  parentId: string | null;
-  fileSizeBytes?: number;
-  mimeType?: string | null;
-  createdAt?: Date;
-  updatedAt?: Date;
+  parent_id: string | null;
+  file_size_bytes?: number;
+  mime_type?: string | null;
+  created_at?: Date;
+  updated_at?: Date;
   children?: Node[];
 }
 
@@ -21,8 +21,8 @@ export function buildTree(nodes: Node[]): Node[] {
 
   // Build the tree structurally
   nodeMap.forEach((node) => {
-    if (node.parentId) {
-      const parent = nodeMap.get(node.parentId);
+    if (node.parent_id) {
+      const parent = nodeMap.get(node.parent_id);
       if (parent) {
         parent.children!.push(node);
       } else {
