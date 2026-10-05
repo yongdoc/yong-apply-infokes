@@ -15,6 +15,4 @@ export const sql = postgres({
   username: DB_USER,
   password: DB_PASSWORD || "",
   database: DB_NAME,
-
-  transform: postgres.camel, // Optional: converts snake_case db columns to camelCase JS properties
 });
