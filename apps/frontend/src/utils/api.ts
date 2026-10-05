@@ -13,5 +13,3 @@ export const api = treaty<App>(API_BASE_URL, {
     return token ? { Authorization: `Bearer ${token}` } : {}
   }
 })
-
-export type ApiClient = typeof api

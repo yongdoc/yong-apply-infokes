@@ -10,7 +10,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'select', folder: Node): void
-  (e: 'refresh'): void
 }>()
 
 const folders = ref<Node[]>([])

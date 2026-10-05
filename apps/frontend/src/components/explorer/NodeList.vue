@@ -9,7 +9,7 @@ interface Props {
   selectedFolderId: string | null
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
 const emit = defineEmits<{
   (e: 'create'): void
@@ -36,11 +36,6 @@ function formatSize(bytes: number | undefined): string {
     unitIndex++
   }
   return `${size} ${units[unitIndex]}`
-}
-
-function formatDate(date: string | undefined): string {
-  if (!date) return '-'
-  return new Date(date).toLocaleString()
 }
 </script>
 

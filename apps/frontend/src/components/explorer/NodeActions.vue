@@ -5,7 +5,7 @@ interface Props {
   node: Node
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
 const emit = defineEmits<{
   (e: 'move', node: Node): void
