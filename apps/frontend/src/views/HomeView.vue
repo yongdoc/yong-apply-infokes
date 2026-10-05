@@ -180,6 +180,7 @@ onMounted(() => {
             @move="openMoveModal"
             @edit="openEditModal"
             @delete="openDeleteModal"
+            @open-folder="handleSelectFolder"
           />
         </div>
       </section>

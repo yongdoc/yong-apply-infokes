@@ -16,7 +16,14 @@ const emit = defineEmits<{
   (e: 'move', node: Node): void
   (e: 'edit', node: Node): void
   (e: 'delete', node: Node): void
+  (e: 'open-folder', node: Node): void
 }>()
+
+function handleRowClick(node: Node): void {
+  if (node.type === 'folder') {
+    emit('open-folder', node)
+  }
+}
 
 function formatSize(bytes: number | undefined): string {
   if (bytes === undefined || bytes === null) return '-'
@@ -75,6 +82,8 @@ function formatDate(date: string | undefined): string {
           v-for="node in nodes"
           :key="node.id"
           class="group flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 hover:border-purple-300 hover:shadow-sm"
+          :class="node.type === 'folder' ? 'cursor-pointer' : ''"
+          @click="handleRowClick(node)"
         >
           <div class="flex items-center gap-3">
             <svg
@@ -109,7 +118,7 @@ function formatDate(date: string | undefined): string {
             </div>
           </div>
 
-          <div class="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+          <div class="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100" @click.stop>
             <NodeActions :node="node" @move="emit('move', $event)" @edit="emit('edit', $event)" @delete="emit('delete', $event)" />
           </div>
         </li>
