@@ -17,11 +17,11 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "types": ["bun", "vite/client"],
+    "types": ["vitest/globals", "vite/client"],
 
     /* Path Aliasing */
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*", "../backend/src/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"]

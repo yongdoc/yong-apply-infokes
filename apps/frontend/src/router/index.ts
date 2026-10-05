@@ -3,7 +3,7 @@ import { authStore } from '@/stores/auth-store'
 import LoginView from '@/views/LoginView.vue'
 import HomeView from '@/views/HomeView.vue'
 
-function requireAuth(
+export function requireAuth(
   _to: RouteLocationNormalized,
   _from: RouteLocationNormalized,
   next: NavigationGuardNext
@@ -15,7 +15,7 @@ function requireAuth(
   }
 }
 
-function requireGuest(
+export function requireGuest(
   _to: RouteLocationNormalized,
   _from: RouteLocationNormalized,
   next: NavigationGuardNext

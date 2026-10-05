@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "build": "vue-tsc -p tsconfig.build.json && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@elysiajs/eden": "^1.4.9",
@@ -18,11 +20,15 @@
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
-    "@vitejs/plugin-vue": "^6.0.8",
-    "@vue/tsconfig": "^0.9.1",
     "@typescript/native": "npm:typescript@7.0.2",
+    "@vitejs/plugin-vue": "^6.0.8",
+    "@vitest/coverage-v8": "^5.0.3",
+    "@vue/test-utils": "^2.5.1",
+    "@vue/tsconfig": "^0.9.1",
+    "happy-dom": "^20.14.5",
     "typescript": "npm:@typescript/typescript6@latest",
     "vite": "^8.3.0",
+    "vitest": "^5.0.3",
     "vue-tsc": "^3.3.11"
   }
 }
